@@ -1,0 +1,49 @@
+name: Android Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: '8.9'
+
+      - name: Verify project files
+        run: |
+          test -f "Part 7/settings.gradle.kts"
+          test -f "Part 7/build.gradle.kts"
+          test -f "Part 7/app/build.gradle.kts"
+
+      - name: Build debug APK
+        working-directory: "Part 7"
+        run: gradle --no-daemon assembleDebug
+
+      # Upload the APK before tests so it remains available if unit tests fail.
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: jarvis-debug-apk
+          path: Part 7/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Run unit tests
+        working-directory: "Part 7"
+        run: gradle --no-daemon testDebugUnitTest
