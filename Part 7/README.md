@@ -91,3 +91,7 @@ The certificate fingerprint must be calculated from the same key used to sign th
 - `local.properties` is local-only; start from `local.properties.example` when setting up a new machine.
 - Screen sharing and accessibility automation require explicit Android user consent and permissions.
 - Bundled Vosk model assets are runtime dependencies; do not remove or rename their directories without updating the model-loading code.
+## Device Monitor and Default Media Apps
+
+- Settings → Device Monitor displays battery level/temperature, internal storage and RAM estimates.
+- Settings → Default Media Apps lets the user choose installed music and video apps. Generic voice requests such as “play music” and “play video” open the selected app. App-specific search deep links are best-effort; Android does not provide a universal API to force every third-party media app to start playback. Explicit YouTube commands retain their existing automation.

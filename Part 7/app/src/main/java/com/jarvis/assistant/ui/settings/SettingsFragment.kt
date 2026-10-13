@@ -152,6 +152,15 @@ class SettingsFragment : Fragment() {
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
         }
 
+        // Device Monitor dashboard
+        binding.rowDeviceMonitor.setOnClickListener {
+            startActivity(Intent(requireContext(), com.jarvis.assistant.ui.device.DeviceMonitorActivity::class.java))
+        }
+
+        binding.rowDefaultApps.setOnClickListener {
+            startActivity(Intent(requireContext(), DefaultMediaAppsActivity::class.java))
+        }
+
         // Section 2: System & Intelligence Data
         binding.rowApiConnection.setOnClickListener {
             startActivity(Intent(requireContext(), ApiConnectionActivity::class.java))

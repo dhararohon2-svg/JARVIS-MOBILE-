@@ -627,6 +627,57 @@ class PhoneControlManager(
     // App Launching (Smart resolution with 100+ aliases)
     // -------------------------------------------------------------
 
+    /** Opens the user's chosen media app. Search intents are best-effort because each app supports different actions. */
+    fun openDefaultMediaApp(category: String, query: String = ""): String {
+        val prefs = context.getSharedPreferences("jarvis_default_media_apps", Context.MODE_PRIVATE)
+        val key = if (category.equals("video", true)) "video_package" else "music_package"
+        val packageName = prefs.getString(key, null)
+        if (packageName.isNullOrBlank()) {
+            return "No default ${category.lowercase(Locale.ROOT)} app selected yet. Open Settings → Default Apps to choose one."
+        }
+        return try {
+            val pm = context.packageManager
+            val cleanQuery = query.trim()
+            if (cleanQuery.isNotBlank()) {
+                // Known app deep links first; third-party apps decide whether they can search or play.
+                val deepLink: Uri? = when (packageName) {
+                    "com.spotify.music" -> Uri.parse("spotify:search:" + Uri.encode(cleanQuery))
+                    "com.google.android.youtube.music" -> Uri.parse("https://music.youtube.com/search?q=" + Uri.encode(cleanQuery))
+                    "com.google.android.youtube" -> Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(cleanQuery))
+                    else -> null
+                }
+                if (deepLink != null) {
+                    val deepLinkIntent = Intent(Intent.ACTION_VIEW, deepLink).apply {
+                        setPackage(packageName)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    if (deepLinkIntent.resolveActivity(pm) != null) {
+                        ActivityLauncherHelper.startActivitySafely(context, deepLinkIntent)
+                        return "Opening your default ${category.lowercase(Locale.ROOT)} app and searching for $cleanQuery."
+                    }
+                }
+                val searchIntent = Intent(Intent.ACTION_SEARCH).apply {
+                    setPackage(packageName)
+                    putExtra(android.app.SearchManager.QUERY, cleanQuery)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                if (searchIntent.resolveActivity(pm) != null) {
+                    ActivityLauncherHelper.startActivitySafely(context, searchIntent)
+                    return "Opening your default ${category.lowercase(Locale.ROOT)} app and searching for $cleanQuery."
+                }
+            }
+            val launchIntent = pm.getLaunchIntentForPackage(packageName)
+                ?: return "The selected ${category.lowercase(Locale.ROOT)} app is not available. Please choose another app in Default Apps settings."
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ActivityLauncherHelper.startActivitySafely(context, launchIntent)
+            if (cleanQuery.isBlank()) "Opening your default ${category.lowercase(Locale.ROOT)} app."
+            else "Opened your default ${category.lowercase(Locale.ROOT)} app. This app may not support voice search."
+        } catch (e: Exception) {
+            Log.e(TAG, "Unable to launch default media app", e)
+            "Couldn't open the selected ${category.lowercase(Locale.ROOT)} app. Check that it is installed and try again."
+        }
+    }
+
     fun openApp(appNameOrPackage: String): String {
         val clean = appNameOrPackage.trim().lowercase(Locale.ROOT)
         Log.i(TAG, "openApp called with: '$clean'")

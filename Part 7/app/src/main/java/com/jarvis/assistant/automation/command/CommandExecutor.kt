@@ -22,6 +22,7 @@ class CommandExecutor(
         Log.i(TAG, "Executing command: $command")
         when (command) {
             // YouTube
+            is JarvisCommand.PlayDefaultMedia -> phoneManager.openDefaultMediaApp(command.category, command.query)
             is JarvisCommand.PlayYouTube -> {
                 val resolvedSong = memoryManager.resolveSongQuery(command.query)
                 memoryManager.trackSongPlay(resolvedSong)

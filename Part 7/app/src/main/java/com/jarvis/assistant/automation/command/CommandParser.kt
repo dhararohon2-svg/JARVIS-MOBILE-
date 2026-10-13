@@ -335,6 +335,24 @@ object CommandParser {
             }
         }
 
+        // 9. User-selected default media apps. Explicit YouTube commands below retain their existing behavior.
+        val defaultMusicOnly = Regex("$prefix(?:play|start|open)\\s+(?:(?:some|my|the)\\s+)?(?:music|songs?|gana|gaane|gaana|tracks?)$", RegexOption.IGNORE_CASE)
+        val defaultVideoOnly = Regex("$prefix(?:play|open|watch)\\s+(?:(?:some|a|the)\\s+)?(?:video|videos|movie|movies)$", RegexOption.IGNORE_CASE)
+        val defaultMusicWithQuery = Regex("$prefix(?:play|start)\\s+(.+?)\\s+(?:on|in|using)\\s+(?:my\\s+)?music\\s+app$", RegexOption.IGNORE_CASE).find(clean)
+        val defaultVideoWithQuery = Regex("$prefix(?:play|watch)\\s+(.+?)\\s+(?:on|in|using)\\s+(?:my\\s+)?video\\s+app$", RegexOption.IGNORE_CASE).find(clean)
+        if (defaultMusicOnly.matches(clean)) {
+            return ParsedCommandResult(JarvisCommand.PlayDefaultMedia("music"), 0.96f, "DEFAULT_MUSIC_APP")
+        }
+        if (defaultVideoOnly.matches(clean)) {
+            return ParsedCommandResult(JarvisCommand.PlayDefaultMedia("video"), 0.96f, "DEFAULT_VIDEO_APP")
+        }
+        if (defaultMusicWithQuery != null) {
+            return ParsedCommandResult(JarvisCommand.PlayDefaultMedia("music", defaultMusicWithQuery.groupValues[1].trim()), 0.95f, "DEFAULT_MUSIC_SEARCH")
+        }
+        if (defaultVideoWithQuery != null) {
+            return ParsedCommandResult(JarvisCommand.PlayDefaultMedia("video", defaultVideoWithQuery.groupValues[1].trim()), 0.95f, "DEFAULT_VIDEO_SEARCH")
+        }
+
         // 9. YouTube Video Play & Search (Strict Intent Anchoring)
         // Compound command: "open youtube and play [song]" / "open youtube and search [query]"
         val openAndPlayMatch = Regex("$prefix(?:open\\s+youtube\\s+(?:and|&)?\\s*(?:play|search)\\s+)(.+)$", RegexOption.IGNORE_CASE).find(clean)
