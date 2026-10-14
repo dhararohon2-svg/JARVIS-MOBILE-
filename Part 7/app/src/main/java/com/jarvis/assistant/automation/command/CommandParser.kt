@@ -391,7 +391,11 @@ object CommandParser {
         // Favorite Song Shortcut ("play my favorite song", "mera favorite gana chalao")
         if (clean.matches(Regex("$prefix(?:play\\s+(?:my\\s+)?(?:favou?rite\\s+song|favou?rite|song)|(?:mera\\s+)?favou?rite\\s+(?:gana|song)\\s+(?:play\\s+karo|chalao|bajao|laga\\s+do))$")) ||
             clean == "play something i like" || clean == "play my song") {
-            return ParsedCommandResult(JarvisCommand.PlayYouTube("my favorite song"), 0.98f, "YOUTUBE_PLAY_FAVORITE")
+            return ParsedCommandResult(
+                JarvisCommand.PlayDefaultMedia("music", "my favorite song"),
+                0.98f,
+                "DEFAULT_MUSIC_FAVORITE"
+            )
         }
 
         // Standard Play: "Play Believer", "Play Shape of You on YouTube", "youtube pe Believer chalao"
@@ -412,7 +416,18 @@ object CommandParser {
                 .replace(Regex("[.,!?:;\"'\\s]+$"), "")
                 .trim()
             if (rawQuery.isNotBlank() && rawQuery.length > 1 && rawQuery != "youtube" && rawQuery != "song" && rawQuery != "music") {
-                return ParsedCommandResult(JarvisCommand.PlayYouTube(rawQuery), 0.95f, "YOUTUBE_PLAY")
+                val explicitlyRequestsYouTube = Regex(
+                    "(?i)(\\byoutube\\b|\\byt\\b)"
+                ).containsMatchIn(clean)
+                return if (explicitlyRequestsYouTube) {
+                    ParsedCommandResult(JarvisCommand.PlayYouTube(rawQuery), 0.95f, "YOUTUBE_PLAY_EXPLICIT")
+                } else {
+                    ParsedCommandResult(
+                        JarvisCommand.PlayDefaultMedia("music", rawQuery),
+                        0.95f,
+                        "DEFAULT_MUSIC_PLAY"
+                    )
+                }
             }
         }
 

@@ -2716,8 +2716,11 @@ class JarvisConversationService : Service() {
                     } else {
                         song
                     }
-                    command = com.jarvis.assistant.automation.command.JarvisCommand.PlayYouTube(finalSong)
-                    matchSource = "ASSISTANT_YOUTUBE_PLAY"
+                    command = com.jarvis.assistant.automation.command.JarvisCommand.PlayDefaultMedia(
+                        "music",
+                        finalSong
+                    )
+                    matchSource = "ASSISTANT_DEFAULT_MUSIC_PLAY"
                 }
             }
         }
